@@ -1,0 +1,74 @@
+version: '3'
+services:
+    cats-mongo:
+        image: mongo:latest
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: mongo
+            MONGO_INITDB_ROOT_PASSWORD: mongo
+            MONGO_INITDB_DATABASE: cats
+        volumes:
+            - cats_mongodb_data:/data/db
+        command: mongod --auth
+    dogs-mongo:
+        image: mongo:latest
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: mongo
+            MONGO_INITDB_ROOT_PASSWORD: mongo
+            MONGO_INITDB_DATABASE: dogs
+        volumes:
+            - dogs_mongodb_data:/data/db
+        command: mongod --auth
+    dogs-api:
+        build:
+            context: ./dogs-api
+            dockerfile: .docker/Dockerfile
+        volumes:
+            - ./dogs-api/index.js:/www/index.js
+            - ./dogs-api/lib:/www/lib
+        depends_on:
+            - dogs-mongo
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.dogs-api.rule=Host(`dogs-api`)"
+            - "traefik.http.routers.dogs-api.rule=PathPrefix(`/v1/dog/`)"
+            - "traefik.http.routers.dogs-api.entrypoints=web"
+    cats-api:
+        build:
+            context: ./cats-api
+            dockerfile: .docker/Dockerfile
+        volumes:
+            - ./cats-api/index.js:/www/index.js
+            - ./cats-api/lib:/www/lib
+        depends_on:
+            - cats-mongo
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.cats-api.rule=Host(`cats-api`)"
+            - "traefik.http.routers.cats-api.rule=PathPrefix(`/v1/cat/`)"
+            - "traefik.http.routers.cats-api.entrypoints=web"
+    cats-dogs-react:
+        stdin_open: true
+        build:
+            context: ./cats-dogs-react
+            dockerfile: .docker/Dockerfile
+        volumes:
+            - ./cats-dogs-react/src:/www/src
+            - ./cats-dogs-react/public:/www/public
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.cats-dogs-react.rule=Host(`cats-dogs-react`)"
+            - "traefik.http.routers.cats-dogs-react.rule=PathPrefix(`/`)"
+            - "traefik.http.routers.cats-dogs-react.entrypoints=web"
+    traefik:
+        build:
+            context: ./traefik
+            dockerfile: .docker/Dockerfile
+        ports:
+            - "8080:8080" # expose the admin UI
+            - "80:80" # expose the web entrypoint
+        volumes:
+            # So that Traefik can listen to the Docker events
+            - /var/run/docker.sock:/var/run/docker.sock
+volumes:
+    cats_mongodb_data:
+    dogs_mongodb_data:

@@ -4,3 +4,6 @@
 [submodule "cats-api"]
 	path = cats-api
 	url = git@github.com:Rolilink/cats-api.git
+[submodule "cats-dogs-react"]
+	path = cats-dogs-react
+	url = git@github.com:Rolilink/cats-dogs-react.git
