@@ -1,0 +1,6 @@
+[submodule "dogs-api"]
+	path = dogs-api
+	url = git@github.com:Rolilink/dogs-api.git
+[submodule "cats-api"]
+	path = cats-api
+	url = git@github.com:Rolilink/cats-api.git
